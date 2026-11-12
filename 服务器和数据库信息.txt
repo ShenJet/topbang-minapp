@@ -1,0 +1,42 @@
+小程序名称：掏棒的车库
+AppID：wx20c25015572e496e
+
+域名地址（是由腾讯云 CloudBase 提供的测试域名，仅供开发测试使用，内容可能处于未审核状态）
+https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com
+
+小程序/公众号中调用
+wx.cloud.callContainer({
+  "config": {
+    "env": "prod-d9gqon58692ae91cf"
+  },
+  "path": "/api/count",
+  "header": {
+    "X-WX-SERVICE": "koa-43g1"
+  },
+  "method": "POST",
+  "data": {
+    "action": "inc"
+  }
+})
+
+微信云托管 后台
+https://cloud.weixin.qq.com/cloudrun/service/koa-43g1
+
+数据库
+外网地址： sh-cynosdbmysql-grp-m2a5a95g.sql.tencentcdb.com:29890
+内网地址：10.21.108.190:3306
+账号 root
+密码 VFMuF7t7
+
+微信云托管·数据库自动开通通知
+小程序名称：掏棒的车库
+AppID：wx20c25015572e496e
+环境ID：prod-d9gqon58692ae91cf
+说明：掏棒的车库微信云托管环境prod-d9gqon58692ae91cf使用模板部署已自动开通了数据库，数据库账号密码如下：
+数据库账号：root
+数据库密码：VFMuF7t7
+如需修改，可前往微信云托管控制台-MySQL中进行数据库密码重置。
+
+微信云托管环境创建成功通知
+环境ID：prod-d9gqon58692ae91cf
+说明：掏棒的车库的微信云托管环境prod-d9gqon58692ae91cf的已创建成功。你可前往微信云托管控制台使用已创建资源。
