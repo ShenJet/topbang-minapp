@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "掏棒的车库",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "car-card": "../../components/car-card/car-card",
+    "filter-sheet": "../../components/filter-sheet/filter-sheet"
+  }
+}

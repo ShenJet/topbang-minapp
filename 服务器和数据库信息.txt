@@ -4,7 +4,7 @@ AppID：wx20c25015572e496e
 域名地址（是由腾讯云 CloudBase 提供的测试域名，仅供开发测试使用，内容可能处于未审核状态）
 https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com
 
-小程序/公众号中调用
+小程序中调用
 wx.cloud.callContainer({
   "config": {
     "env": "prod-d9gqon58692ae91cf"

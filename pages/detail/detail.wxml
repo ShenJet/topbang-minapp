@@ -1,0 +1,153 @@
+<view class="detail-page">
+  <view wx:if="{{loading}}" class="loading-block">
+    <view class="loading-spinner"></view>
+    <text>正在加载车源…</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="error-block">
+    <view class="error-circle">!</view>
+    <view class="error-title">车源走丢了</view>
+    <view class="error-sub">{{error}}</view>
+    <button class="error-btn" bindtap="load">重新加载</button>
+    <view class="error-link" bindtap="goHome">返回车源列表</view>
+  </view>
+
+  <block wx:else>
+    <view class="gallery-wrap">
+      <swiper
+        wx:if="{{vehicle.images_full.length}}"
+        class="gallery"
+        indicator-dots="{{vehicle.images_full.length > 1}}"
+        indicator-color="rgba(255,255,255,0.42)"
+        indicator-active-color="#ffffff"
+        circular
+        bindchange="onSwiperChange"
+      >
+        <swiper-item wx:for="{{vehicle.images_full}}" wx:key="*this">
+          <image class="gallery-img" src="{{item}}" mode="aspectFill" bindtap="onPreview" />
+        </swiper-item>
+      </swiper>
+      <view wx:else class="gallery-empty">
+        <view class="empty-car"></view>
+        <text>商家暂未上传实拍图</text>
+      </view>
+
+      <view class="gallery-badges">
+        <text wx:if="{{vehicle.is_new}}" class="g-badge new">新上架</text>
+        <text wx:if="{{vehicle.is_consignment}}" class="g-badge consign">寄售</text>
+        <text class="g-badge code">{{vehicle.code}}</text>
+      </view>
+      <view wx:if="{{vehicle.images_full.length > 1}}" class="gallery-count">
+        {{currentImage + 1}} / {{vehicle.images_full.length}}
+      </view>
+    </view>
+
+    <view class="content">
+      <view class="head-card">
+        <view class="title-row">
+          <view class="car-title">{{vehicle.title}}</view>
+          <view class="head-price">
+            <text class="p-num">{{vehicle.price_num}}</text>
+            <text class="p-unit">{{vehicle.price_unit}}</text>
+          </view>
+        </view>
+        <view class="head-meta">{{vehicle.meta_text}}</view>
+        <view class="tags" wx:if="{{vehicle.audio_brand || vehicle.is_consignment || vehicle.board_label}}">
+          <text wx:if="{{vehicle.audio_brand}}" class="tag purple">♪ {{vehicle.audio_brand}}</text>
+          <text wx:if="{{vehicle.is_consignment}}" class="tag orange">车主委托寄售</text>
+          <text wx:if="{{vehicle.board_label}}" class="tag gray">{{vehicle.board_label}}</text>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">车辆参数</view>
+        <view class="spec-grid">
+          <view class="spec">
+            <view class="spec-k">牌照所在地</view>
+            <view class="spec-v">{{vehicle.region_text}}</view>
+          </view>
+          <view class="spec">
+            <view class="spec-k">车辆类型</view>
+            <view class="spec-v">{{vehicle.type || '待录入'}}</view>
+          </view>
+          <view class="spec">
+            <view class="spec-k">年款</view>
+            <view class="spec-v">{{vehicle.year_text}}</view>
+          </view>
+          <view class="spec">
+            <view class="spec-k">里程</view>
+            <view class="spec-v">{{vehicle.mileage_text}}</view>
+          </view>
+          <view class="spec">
+            <view class="spec-k">排量</view>
+            <view class="spec-v">{{vehicle.displacement_text}}</view>
+          </view>
+          <view class="spec">
+            <view class="spec-k">车源编号</view>
+            <view class="spec-v mono">{{vehicle.code}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{vehicle.audio_brand}}" class="card audio-card">
+        <view class="audio-icon">♪</view>
+        <view class="audio-body">
+          <view class="audio-title">{{vehicle.audio_brand}}</view>
+          <view class="audio-sub">品牌音响 · 到店可预约试听</view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">车况说明</view>
+        <view class="desc">{{vehicle.description || '车况信息以到店实车为准，欢迎微信咨询获取检测报告与维保记录。'}}</view>
+      </view>
+
+      <view wx:if="{{vehicle.is_consignment}}" class="card consign-card">
+        <view class="card-title">寄售说明</view>
+        <view class="desc">该车为粉丝车主委托寄售，车况真实可查，看车需提前预约。成交价格可与车主沟通，商家提供交易协助与手续办理。</view>
+      </view>
+
+      <view wx:if="{{store.contact_wechat || store.contact_phone}}" class="card contact-card">
+        <view class="card-title">联系商家</view>
+        <view wx:if="{{store.contact_wechat}}" class="contact-row">
+          <view class="contact-label">客服微信</view>
+          <view class="contact-value">{{store.contact_wechat}}</view>
+          <view class="contact-copy" data-copy="{{store.contact_wechat}}" data-label="微信号" catchtap="onCopy">复制</view>
+        </view>
+        <view wx:if="{{store.contact_phone}}" class="contact-row">
+          <view class="contact-label">联系电话</view>
+          <view class="contact-value">{{store.contact_phone}}</view>
+          <view class="contact-copy" data-copy="{{store.contact_phone}}" data-label="电话号码" catchtap="onCopy">复制</view>
+        </view>
+      </view>
+
+      <view class="card guide-card">
+        <view class="card-title">如何咨询</view>
+        <view class="guide-step">
+          <text class="guide-no">1</text>
+          <text class="guide-text">点击下方「微信咨询」，复制车源编号 {{vehicle.code}}</text>
+        </view>
+        <view class="guide-step">
+          <text class="guide-no">2</text>
+          <text class="guide-text">添加客服微信，发送编号和想了解的问题</text>
+        </view>
+        <view class="guide-step">
+          <text class="guide-no">3</text>
+          <text class="guide-text">预约到店看车，车况与手续当面核验</text>
+        </view>
+      </view>
+
+      <view class="foot-note">真实车源 · 一车一况 · 以实车为准</view>
+      <view class="cta-placeholder"></view>
+    </view>
+
+    <view class="cta-bar">
+      <view class="cta-price">
+        <text class="cta-num">{{vehicle.price_num}}</text>
+        <text class="cta-unit">{{vehicle.price_unit}}</text>
+      </view>
+      <button class="cta-share" open-type="share">分享</button>
+      <button class="cta-main" bindtap="onContact">微信咨询</button>
+    </view>
+  </block>
+</view>

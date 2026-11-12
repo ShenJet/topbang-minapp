@@ -1,0 +1,34 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/purchase/purchase"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#16324F",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "掏棒的车库",
+    "backgroundColor": "#F2F5F8",
+    "backgroundTextStyle": "dark",
+    "onReachBottomDistance": 90
+  },
+  "tabBar": {
+    "color": "#8A99A8",
+    "selectedColor": "#E8833A",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "逛车"
+      },
+      {
+        "pagePath": "pages/purchase/purchase",
+        "text": "淘车求购"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

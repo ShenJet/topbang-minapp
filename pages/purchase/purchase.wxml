@@ -1,0 +1,181 @@
+<view class="purchase-page">
+  <view class="hero">
+    <view class="hero-glow"></view>
+    <view class="hero-kicker">定向淘车 · 省心找车</view>
+    <view class="hero-title">想找什么车，<text class="accent">告诉我们</text></view>
+    <view class="hero-sub">填写品牌车型、预算和上牌地区，商家按需求匹配在售车源，合适第一时间联系你。</view>
+    <view class="hero-steps">
+      <view class="h-step"><text class="h-no">1</text>提交需求</view>
+      <view class="h-line"></view>
+      <view class="h-step"><text class="h-no">2</text>商家匹配</view>
+      <view class="h-line"></view>
+      <view class="h-step"><text class="h-no">3</text>到店看车</view>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="form-title">发布求购需求</view>
+
+    <view class="field">
+      <view class="field-label">想买的品牌 / 车型 <text class="required">*</text></view>
+      <input
+        class="field-input"
+        value="{{form.brand_model}}"
+        data-field="brand_model"
+        bindinput="onInput"
+        maxlength="160"
+        placeholder="例如：2020款 奥迪A4L 40TFSI 四驱"
+        placeholder-class="field-ph"
+      />
+    </view>
+
+    <view class="field">
+      <view class="field-label">预算区间（万元）</view>
+      <view class="budget-row">
+        <view class="budget-box">
+          <input
+            class="budget-input"
+            value="{{form.budget_min}}"
+            data-field="budget_min"
+            bindinput="onInput"
+            type="digit"
+            maxlength="7"
+            placeholder="最低"
+            placeholder-class="field-ph"
+          />
+          <text class="budget-unit">万</text>
+        </view>
+        <view class="budget-sep">—</view>
+        <view class="budget-box">
+          <input
+            class="budget-input"
+            value="{{form.budget_max}}"
+            data-field="budget_max"
+            bindinput="onInput"
+            type="digit"
+            maxlength="7"
+            placeholder="最高"
+            placeholder-class="field-ph"
+          />
+          <text class="budget-unit">万</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">意向牌照地区</view>
+      <picker mode="selector" range="{{regionChoices}}" value="{{regionIndex}}" bindchange="onRegionChange">
+        <view class="picker-inner">
+          <text class="{{regionIndex ? 'picker-text' : 'picker-ph'}}">{{regionChoices[regionIndex]}}</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <view class="field-label">怎么称呼你</view>
+      <input
+        class="field-input"
+        value="{{form.nickname}}"
+        data-field="nickname"
+        bindinput="onInput"
+        maxlength="20"
+        placeholder="选填，榜单会展示为「王*」"
+        placeholder-class="field-ph"
+      />
+    </view>
+
+    <view class="field">
+      <view class="field-label">联系方式（微信 / 手机） <text class="required">*</text></view>
+      <input
+        class="field-input"
+        value="{{form.contact}}"
+        data-field="contact"
+        bindinput="onInput"
+        maxlength="120"
+        placeholder="用于商家与你联系，不会公开展示"
+        placeholder-class="field-ph"
+      />
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注</view>
+      <textarea
+        class="field-textarea"
+        value="{{form.note}}"
+        data-field="note"
+        bindinput="onInput"
+        maxlength="500"
+        placeholder="颜色、车况、里程、变速箱等要求，例如：白色或黑色，无重大事故，里程 6 万内"
+        placeholder-class="field-ph"
+      />
+    </view>
+
+    <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+      {{submitting ? '正在提交…' : '提交求购申请'}}
+    </button>
+    <view class="privacy">提交后商家在后台受理，联系方式仅商家可见；榜单仅展示昵称、预算和地区。</view>
+  </view>
+
+  <view class="section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">求购榜单</view>
+        <view class="section-sub">近 30 天 · 一起看看大家在找什么车</view>
+      </view>
+      <view wx:if="{{requests.length}}" class="request-count">{{requests.length}} 条</view>
+    </view>
+
+    <view wx:if="{{loadingList && !requests.length}}" class="list-skeleton">
+      <view class="sk-req" wx:for="{{[1, 2, 3]}}" wx:key="*this">
+        <view class="sk-line w40"></view>
+        <view class="sk-line w75"></view>
+        <view class="sk-line w55"></view>
+      </view>
+    </view>
+
+    <view wx:elif="{{listError}}" class="list-error">
+      <text>{{listError}}</text>
+      <view class="retry" bindtap="loadList">重新加载</view>
+    </view>
+
+    <view wx:elif="{{!requests.length}}" class="list-empty">
+      <view class="empty-circle">∅</view>
+      <view class="empty-title">还没有公开的求购需求</view>
+      <view class="empty-sub">来发第一条，商家会认真帮你找车。</view>
+    </view>
+
+    <view wx:else class="request-list">
+      <view class="request-card" wx:for="{{requests}}" wx:key="id">
+        <view class="req-top">
+          <view class="req-name">{{item.nickname}}</view>
+          <view class="req-time">{{item.time_text}}</view>
+          <view class="req-status {{item.status_class}}">{{item.status_text}}</view>
+        </view>
+        <view class="req-title">求购：{{item.brand_model}}</view>
+        <view class="req-meta">
+          <text class="req-chip price">{{item.budget_text}}</text>
+          <text class="req-chip">{{item.region_text}}</text>
+          <text wx:if="{{item.source === 'seed'}}" class="req-chip plain">示例数据</text>
+        </view>
+        <view wx:if="{{item.note}}" class="req-note">{{item.note}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{store.contact_wechat || store.contact_phone}}" class="contact-card">
+    <view class="contact-head">不想填表？直接联系商家</view>
+    <view wx:if="{{store.contact_wechat}}" class="contact-row">
+      <text class="contact-label">客服微信</text>
+      <text class="contact-value">{{store.contact_wechat}}</text>
+      <text class="contact-copy" data-copy="{{store.contact_wechat}}" data-label="微信号" catchtap="onCopy">复制</text>
+    </view>
+    <view wx:if="{{store.contact_phone}}" class="contact-row">
+      <text class="contact-label">联系电话</text>
+      <text class="contact-value">{{store.contact_phone}}</text>
+      <text class="contact-copy" data-copy="{{store.contact_phone}}" data-label="电话号码" catchtap="onCopy">复制</text>
+    </view>
+  </view>
+
+  <view class="page-foot">{{store.name || '掏棒的车库'}} · 认真对待每一次找车需求</view>
+</view>
