@@ -76,46 +76,48 @@ topbang-minapp/
 
 ### 3. 调试模式
 
-修改 `config.js`：
+把 `config.js` 顶部的 `useCloud` 改为 `false` 即可，本地地址由 `localBaseUrl` 自动接管：
 
 ```js
-module.exports = {
-  useCloud: false,
-  apiBaseUrl: 'http://127.0.0.1:3000',
-  assetBaseUrl: 'http://127.0.0.1:3000',
-  // ...
-};
+const useCloud = false;
+const localBaseUrl = 'http://127.0.0.1:3000'; // 真机调试改成电脑局域网 IP
 ```
 
 并在开发者工具「详情 → 本地设置」勾选：
 
 - 不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书
 
-`request.js` 在云托管调用出现网络错误时会自动回退到 `apiBaseUrl`，本地调试也可以保持 `useCloud: true`，首个请求失败后自动走 HTTP。真机预览访问本机地址时，请把 `apiBaseUrl` 换成电脑局域网 IP。
+本地调试请务必使用 `useCloud: false`。`useCloud: true` 时 `apiBaseUrl` / `assetBaseUrl` 会自动使用云端域名，避免出现“API 走云托管、图片却指向 127.0.0.1”的混合状态。
 
 ### 4. 云托管模式（推荐）
 
-`config.js` 当前已按测试环境填写：
+`config.js` 当前已按测试环境填写，并把 `useCloud` 作为唯一开关：
 
 ```js
+const useCloud = true;
+const cloudBaseUrl = 'https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com';
+
 cloudEnv: 'prod-d9gqon58692ae91cf',
 cloudService: 'koa-43g1',
-useCloud: true,
-apiBaseUrl: 'https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com',
-assetBaseUrl: 'https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com'
+useCloud,
+apiBaseUrl: useCloud ? cloudBaseUrl : localBaseUrl,
+assetBaseUrl: useCloud ? cloudBaseUrl : localBaseUrl
 ```
 
-微信开发者工具中需要：
+微信开发者工具 / 体验版中需要：
 
 1. 开通云开发，并确保当前小程序被授权访问该云托管环境
-2. 云托管服务已部署，服务名与 `cloudService` 一致
-3. 若部署了新的服务 / 环境，同步修改 `cloudEnv`、`cloudService` 与两个域名
+2. 云托管服务已部署、已开启公网访问，服务名与 `cloudService` 一致
+3. 若部署了新的服务 / 环境，同步修改 `cloudEnv`、`cloudService` 与 `cloudBaseUrl`
+4. 体验版发布前确认 `useCloud: true`，不要把两个域名留成 `127.0.0.1`
 
 说明：
 
 - API 请求走 `wx.cloud.callContainer`，请求头带 `X-WX-SERVICE`，不占用小程序 request 合法域名
-- 图片通过 `<image src="{{cover_url}}">` 加载；后端默认返回 `/api/uploads/:id`，由 `assetBaseUrl` 拼接。若后端配置了 `COS_PUBLIC_BASE_URL`，会直接返回 COS/CDN 的绝对地址
+- 图片通过 `<image src="{{cover_url}}">` 加载；后端默认返回 `/api/uploads/:id`，由 `assetBaseUrl` 拼成云托管域名下的 HTTPS 地址。若后端配置了 `COS_PUBLIC_BASE_URL`，会直接返回 COS/CDN 的绝对地址
 - 若改用 HTTP 回退，或出现 COS/CDN 绝对图片地址，需要在小程序后台配置 request 合法域名与 downloadFile 合法域名
+- 若图片地址是 `cos.ap-shanghai.myqcloud.com` 且返回 403，说明桶是私有读；请清空 `COS_PUBLIC_BASE_URL` 改用后端代理，或把桶设为公有读 / 绑定 CDN 域名
+- 若图片地址是云托管域名但返回 502，检查后端日志中的 `[uploads] COS 读取失败`，以及 `COS_USE_OPEN_API` 与开放接口服务是否配置正确
 
 ## 数据与接口
 
@@ -134,8 +136,9 @@ assetBaseUrl: 'https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com'
 
 ## 上线检查
 
-- [ ] `config.js` 指向正式云托管环境与服务
-- [ ] 后端已部署，`/api/health` 与 `/api/config` 正常返回
+- [ ] `config.js` 指向正式云托管环境与服务，且 `useCloud: true`
+- [ ] `apiBaseUrl` / `assetBaseUrl` 不是 `127.0.0.1` 或局域网 IP
+- [ ] 后端已部署并开启公网访问，`/api/health`、`/api/config`、`/api/uploads/:id` 可直接访问
 - [ ] 小程序后台配置服务类目、隐私协议（收集联系方式用于商家回访）
 - [ ] 真机验证图片加载、拨打电话、复制微信、分享
 - [ ] 如需 HTTP 回退，配置 request 合法域名并使用 HTTPS

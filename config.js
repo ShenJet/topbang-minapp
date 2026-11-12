@@ -1,23 +1,33 @@
 /**
  * 小程序全局配置
  *
- * 云托管调用（推荐）：使用 wx.cloud.callContainer，不依赖小程序后台的 request 合法域名。
- * 本地调试：把 useCloud 改为 false，并把 apiBaseUrl 改成本机地址
- *           （如 http://127.0.0.1:3000），同时在开发者工具中关闭“域名校验”。
+ * 线上体验版 / 正式版：useCloud = true。
+ *   - API 走 wx.cloud.callContainer（cloudEnv + cloudService）
+ *   - 图片走云托管 HTTPS 域名下的 /api/uploads/:id（assetBaseUrl）
  *
- * 部署新的云托管服务后，请同步修改 cloudService、apiBaseUrl、assetBaseUrl。
+ * 本地调试：useCloud = false，API 和图片都走 localBaseUrl。
+ *   开发者工具需关闭「不校验合法域名」；真机调试需把 localBaseUrl
+ *   改成电脑的局域网 IP（如 http://192.168.1.10:3000）。
+ *
+ * 注意：useCloud = true 时，apiBaseUrl / assetBaseUrl 必须是云端域名；
+ * 写成 127.0.0.1 会让体验版 API 走云托管、图片却指向手机本机，导致图片加载失败。
  */
+
+const useCloud = true;
+
+// 云托管服务测试域名（与 cloudService 对应）
+const cloudBaseUrl = 'https://koa-43g1-345809-11-1529810308.sh.run.tcloudbase.com';
+// 本地 Koa 服务地址；真机调试时改成电脑局域网 IP
+const localBaseUrl = 'http://127.0.0.1:3000';
+
 module.exports = {
   cloudEnv: 'prod-d9gqon58692ae91cf',
   cloudService: 'koa-43g1',
-  // 本地调试：关闭云托管调用，直接请求本机 Koa 服务。
-  // 真机调试时把 127.0.0.1 换成本机局域网 IP（如 http://192.168.1.10:3000）。
-  useCloud: true,
+  useCloud,
 
-  // 本地 Koa 服务地址，用于 API 请求和 <image> 加载 /api/uploads/:id 图片。
-  // 开发者工具中需关闭「不校验合法域名」；真机需使用局域网 IP。
-  apiBaseUrl: 'http://127.0.0.1:3000',
-  assetBaseUrl: 'http://127.0.0.1:3000',
+  // request.js 在云托管调用失败时会回退到 apiBaseUrl，所以这里也必须用云端域名。
+  apiBaseUrl: useCloud ? cloudBaseUrl : localBaseUrl,
+  assetBaseUrl: useCloud ? cloudBaseUrl : localBaseUrl,
 
   requestTimeout: 15000,
   pageSize: 10

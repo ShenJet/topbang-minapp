@@ -139,7 +139,8 @@ function request(options = {}) {
 function assetUrl(value) {
   if (!value) return '';
   const url = String(value);
-  if (/^https?:\/\//i.test(url) || url.indexOf('data:') === 0) return url;
+  // https/http、data: 以及云存储 fileID（cloud://）都直接交给 <image> 使用。
+  if (/^(https?:\/\/|cloud:\/\/|data:)/i.test(url)) return url;
   const base = config.assetBaseUrl.replace(/\/+$/, '');
   return base + (url.charAt(0) === '/' ? url : `/${url}`);
 }
