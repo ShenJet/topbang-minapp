@@ -2,6 +2,7 @@ const app = getApp();
 const config = require('../../config');
 const { request } = require('../../utils/request');
 const { normalizeVehicle } = require('../../utils/mapper');
+const favorites = require('../../utils/favorites');
 const {
   emptyFilters,
   activeFilterCount,
@@ -41,6 +42,15 @@ Page({
     this.loadConfig(false);
     this.loadFacets();
     this.loadVehicles(true);
+  },
+
+  onShow() {
+    this.syncFavorites();
+  },
+
+  syncFavorites() {
+    if (!this.data.items || !this.data.items.length) return;
+    this.setData({ items: favorites.decorate(this.data.items) });
   },
 
   onUnload() {
@@ -146,9 +156,9 @@ Page({
     return request({ path: '/api/vehicles', data: query })
       .then((res) => {
         if (reqId !== this.reqId) return;
-        const mapped = ((res && res.items) || [])
-          .map(normalizeVehicle)
-          .filter(Boolean);
+        const mapped = favorites.decorate(
+          ((res && res.items) || []).map(normalizeVehicle).filter(Boolean)
+        );
         const items = reset ? mapped : this.data.items.concat(mapped);
 
         this.setData({

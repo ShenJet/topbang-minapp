@@ -1,6 +1,25 @@
 const app = getApp();
 const { request } = require('../../utils/request');
 const { normalizeVehicle } = require('../../utils/mapper');
+const favorites = require('../../utils/favorites');
+
+// 与后端 src/ratings.js 的 key 保持一致；label 以后端返回为准
+const RATING_OPTIONS = [
+  { key: 'explosive', label: '夯爆了' },
+  { key: 'top', label: '太顶了' },
+  { key: 'elite', label: '人上人' },
+  { key: 'npc', label: 'NPC' },
+  { key: 'bad', label: '拉完了' }
+];
+
+function blankRatingOptions() {
+  return RATING_OPTIONS.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: 0,
+    active: false
+  }));
+}
 
 Page({
   data: {
@@ -8,7 +27,14 @@ Page({
     error: '',
     vehicle: null,
     currentImage: 0,
-    store: {}
+    store: {},
+
+    isFavorite: false,
+    ratingOptions: blankRatingOptions(),
+    ratingTotal: 0,
+    ratingMine: '',
+    ratingMineLabel: '',
+    ratingSubmitting: false
   },
 
   onLoad(options) {
@@ -24,6 +50,15 @@ Page({
     }
   },
 
+  onShow() {
+    const vehicle = this.data.vehicle;
+    if (!vehicle) return;
+    const isFavorite = favorites.isFavorite(vehicle.id);
+    if (isFavorite !== this.data.isFavorite) {
+      this.setData({ isFavorite });
+    }
+  },
+
   loadStore() {
     app.getConfig().then((data) => {
       if (data && data.store) this.setData({ store: data.store });
@@ -32,7 +67,7 @@ Page({
 
   load() {
     if (!this.vehicleId) {
-      this.setData({ loading: false, error: '缺少车源编号，请返回列表重新选择' });
+      this.setData({ loading: false, error: '缺少车源信息，请返回列表重新选择' });
       return;
     }
 
@@ -40,8 +75,14 @@ Page({
     request({ path: `/api/vehicles/${encodeURIComponent(this.vehicleId)}` })
       .then((raw) => {
         const vehicle = normalizeVehicle(raw);
-        this.setData({ vehicle, loading: false, currentImage: 0 });
+        this.setData({
+          vehicle,
+          loading: false,
+          currentImage: 0,
+          isFavorite: favorites.isFavorite(vehicle.id)
+        });
         wx.setNavigationBarTitle({ title: vehicle.title || '车源详情' });
+        this.loadRatings(vehicle.id);
       })
       .catch((err) => {
         this.setData({
@@ -49,6 +90,80 @@ Page({
           error: err.message || '车源不存在或已下架'
         });
       });
+  },
+
+  loadRatings(vehicleId) {
+    if (!vehicleId) return;
+    request({ path: `/api/vehicles/${encodeURIComponent(vehicleId)}/ratings` })
+      .then((data) => {
+        this.applyRatings(data);
+      })
+      .catch(() => {
+        // 评价加载失败不阻塞详情展示，标签仍可点击提交
+      });
+  },
+
+  applyRatings(data) {
+    const items = (data && Array.isArray(data.items)) ? data.items : [];
+    const mine = (data && data.mine) || '';
+    const options = RATING_OPTIONS.map((option) => {
+      const found = items.filter((item) => item && item.key === option.key)[0];
+      return {
+        key: option.key,
+        label: (found && found.label) || option.label,
+        count: Number(found && found.count) || 0,
+        active: mine === option.key
+      };
+    });
+    const active = options.filter((item) => item.active)[0];
+
+    this.setData({
+      ratingOptions: options,
+      ratingTotal: Number(data && data.total) || 0,
+      ratingMine: mine,
+      ratingMineLabel: active ? active.label : ''
+    });
+  },
+
+  onRate(event) {
+    const key = (event.currentTarget.dataset || {}).key || '';
+    const vehicle = this.data.vehicle;
+    if (!vehicle || !key || this.data.ratingSubmitting) return;
+
+    if (this.data.ratingMine === key) {
+      wx.showToast({ title: '已选过该评价', icon: 'none' });
+      return;
+    }
+
+    this.setData({ ratingSubmitting: true });
+    request({
+      path: `/api/vehicles/${encodeURIComponent(vehicle.id)}/rating`,
+      method: 'POST',
+      data: { rating: key }
+    })
+      .then((data) => {
+        this.applyRatings(data);
+        this.setData({ ratingSubmitting: false });
+        wx.showToast({ title: '评价成功', icon: 'success' });
+      })
+      .catch((err) => {
+        this.setData({ ratingSubmitting: false });
+        wx.showToast({
+          title: err.message || '评价失败，请稍后再试',
+          icon: 'none'
+        });
+      });
+  },
+
+  onToggleFavorite() {
+    const vehicle = this.data.vehicle;
+    if (!vehicle) return;
+    const followed = favorites.toggle(vehicle.id);
+    this.setData({ isFavorite: followed });
+    wx.showToast({
+      title: followed ? '已关注车源' : '已取消关注',
+      icon: 'none'
+    });
   },
 
   onSwiperChange(event) {
@@ -84,6 +199,14 @@ Page({
     this.copyText(dataset.copy, dataset.label);
   },
 
+  formatVehicleInfo(vehicle) {
+    if (!vehicle) return '';
+    return [vehicle.title, vehicle.brand, vehicle.model, vehicle.price_text]
+      .map((item) => String(item || '').trim())
+      .filter(Boolean)
+      .join('\n');
+  },
+
   onContact() {
     const vehicle = this.data.vehicle;
     if (!vehicle) return;
@@ -91,15 +214,15 @@ Page({
     const store = Object.assign({}, app.globalData.store || {}, this.data.store || {});
     const wechat = String(store.contact_wechat || '').trim();
     const phone = String(store.contact_phone || '').trim();
-    const code = vehicle.code || '';
+    const info = this.formatVehicleInfo(vehicle);
 
     if (!wechat && !phone) {
       wx.showModal({
         title: '联系商家',
-        content: `请先复制车源编号 ${code}，再通过小程序客服留言，商家会尽快回复。`,
-        confirmText: '复制编号',
+        content: '请先复制车辆信息，再通过小程序客服留言，商家会尽快回复。',
+        confirmText: '复制信息',
         success: (res) => {
-          if (res.confirm) this.copyText(code, '车源编号');
+          if (res.confirm) this.copyText(info, '车辆信息');
         }
       });
       return;
@@ -115,8 +238,8 @@ Page({
       items.push('拨打客服电话');
       actions.push('phone');
     }
-    items.push(`复制车源编号 ${code}`);
-    actions.push('code');
+    items.push('复制信息');
+    actions.push('info');
 
     wx.showActionSheet({
       itemList: items,
@@ -126,8 +249,8 @@ Page({
           this.copyText(wechat, '客服微信号');
         } else if (action === 'phone') {
           wx.makePhoneCall({ phoneNumber: phone });
-        } else if (action === 'code') {
-          this.copyText(code, '车源编号');
+        } else if (action === 'info') {
+          this.copyText(info, '车辆信息');
         }
       }
     });

@@ -79,6 +79,14 @@
   line-height: 1.2;
 }
 
+.badge.favorite {
+  padding: 3rpx 9rpx 5rpx;
+  background: rgba(16, 32, 47, 0.62);
+  color: #ffc400;
+  font-size: 20rpx;
+  text-shadow: 0 0 8rpx rgba(255, 196, 0, 0.45);
+}
+
 .badge.new {
   background: rgba(7, 193, 96, 0.92);
 }
@@ -151,10 +159,4 @@
 .price .unit {
   margin-left: 2rpx;
   font-size: 21rpx;
-}
-
-.code {
-  color: #a2afbc;
-  font-family: "SF Mono", Menlo, Consolas, monospace;
-  font-size: 19rpx;
 }

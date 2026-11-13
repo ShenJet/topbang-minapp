@@ -11,6 +11,7 @@
       <text>暂无实拍</text>
     </view>
     <view class="badges">
+      <text wx:if="{{vehicle.is_favorite}}" class="badge favorite">★</text>
       <text wx:if="{{vehicle.is_new}}" class="badge new">新上架</text>
       <text wx:if="{{vehicle.is_consignment}}" class="badge consign">寄售</text>
     </view>
@@ -25,7 +26,6 @@
         <text class="num">{{vehicle.price_num}}</text>
         <text class="unit">{{vehicle.price_unit}}</text>
       </view>
-      <view class="code">{{vehicle.code}}</view>
     </view>
   </view>
 </navigator>

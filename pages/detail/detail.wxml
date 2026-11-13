@@ -32,10 +32,9 @@
         <text>商家暂未上传实拍图</text>
       </view>
 
-      <view class="gallery-badges">
+      <view wx:if="{{vehicle.is_new || vehicle.is_consignment}}" class="gallery-badges">
         <text wx:if="{{vehicle.is_new}}" class="g-badge new">新上架</text>
         <text wx:if="{{vehicle.is_consignment}}" class="g-badge consign">寄售</text>
-        <text class="g-badge code">{{vehicle.code}}</text>
       </view>
       <view wx:if="{{vehicle.images_full.length > 1}}" class="gallery-count">
         {{currentImage + 1}} / {{vehicle.images_full.length}}
@@ -56,6 +55,34 @@
           <text wx:if="{{vehicle.audio_brand}}" class="tag purple">♪ {{vehicle.audio_brand}}</text>
           <text wx:if="{{vehicle.is_consignment}}" class="tag orange">车主委托寄售</text>
           <text wx:if="{{vehicle.board_label}}" class="tag gray">{{vehicle.board_label}}</text>
+        </view>
+        <view class="follow-row">
+          <view class="follow-btn {{isFavorite ? 'active' : ''}}" bindtap="onToggleFavorite">
+            <text class="follow-star">{{isFavorite ? '★' : '☆'}}</text>
+            <text>{{isFavorite ? '已关注车源' : '关注车源'}}</text>
+          </view>
+          <text class="follow-hint">{{isFavorite ? '首页缩略图已显示黄星' : '关注后首页缩略图显示黄星'}}</text>
+        </view>
+      </view>
+
+      <view class="card rating-card">
+        <view class="card-title">用户评价</view>
+        <view class="rating-sub">你觉得这台车怎么样？点选一个评价</view>
+        <view class="rating-tags">
+          <view
+            wx:for="{{ratingOptions}}"
+            wx:key="key"
+            class="rating-tag {{item.active ? 'active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="onRate"
+          >
+            <text class="rating-label">{{item.label}}</text>
+            <text class="rating-count">{{item.count}}</text>
+          </view>
+        </view>
+        <view class="rating-foot">
+          <text>共 {{ratingTotal}} 人评价</text>
+          <text wx:if="{{ratingMineLabel}}" class="rating-mine">你的评价：{{ratingMineLabel}}</text>
         </view>
       </view>
 
@@ -81,10 +108,6 @@
           <view class="spec">
             <view class="spec-k">排量</view>
             <view class="spec-v">{{vehicle.displacement_text}}</view>
-          </view>
-          <view class="spec">
-            <view class="spec-k">车源编号</view>
-            <view class="spec-v mono">{{vehicle.code}}</view>
           </view>
         </view>
       </view>
@@ -125,11 +148,11 @@
         <view class="card-title">如何咨询</view>
         <view class="guide-step">
           <text class="guide-no">1</text>
-          <text class="guide-text">点击下方「微信咨询」，复制车源编号 {{vehicle.code}}</text>
+          <text class="guide-text">点击下方「微信咨询」，选择「复制信息」</text>
         </view>
         <view class="guide-step">
           <text class="guide-no">2</text>
-          <text class="guide-text">添加客服微信，发送编号和想了解的问题</text>
+          <text class="guide-text">添加客服微信，粘贴车辆信息并说明想了解的问题</text>
         </view>
         <view class="guide-step">
           <text class="guide-no">3</text>

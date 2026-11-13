@@ -23,7 +23,7 @@ topbang-minapp/
 ├── project.config.json            # 开发者工具项目配置（AppID 已写入）
 ├── sitemap.json
 ├── components/
-│   ├── car-card/                  # 车源卡片（封面、徽标、价格、编号）
+│   ├── car-card/                  # 车源卡片（封面、徽标、价格）
 │   └── filter-sheet/              # 六维筛选底部弹层
 ├── pages/
 │   ├── index/                     # 逛车：板块、搜索、筛选、分页列表
@@ -32,6 +32,7 @@ topbang-minapp/
 └── utils/
     ├── request.js                 # 云托管调用、HTTP 回退、图片地址补全
     ├── mapper.js                  # 接口数据 → 页面展示字段
+    ├── favorites.js               # 关注车源（本地缓存）
     ├── format.js                  # 价格（万）、预算、相对时间
     └── options.js                 # 价格/年份/里程/排量筛选区间
 ```
@@ -41,17 +42,19 @@ topbang-minapp/
 ### 逛车 `pages/index/index`
 
 - 顶部店铺品牌区：店名、slogan、车源总数、在售板块数、地址
-- 搜索：品牌 / 车型 / 编号关键词，400ms 防抖
+- 搜索：品牌 / 车型 / 牌照关键词，400ms 防抖
 - 板块横向切换：全部 + 后台启用的板块（求购板块不展示）
 - 六维筛选：牌照地区、价格、车型、年份、里程、排量
-- 车源卡片：封面、新上架 / 寄售徽标、音频标识、价格、地区 / 年款 / 里程
+- 车源卡片：封面、关注星标（黄星，位于新上架左侧）、新上架 / 寄售徽标、音频标识、价格、地区 / 年款 / 里程
 - 下拉刷新、触底分页、骨架屏、空状态、分享
 
 ### 车源详情 `pages/detail/detail`
 
 - 图片轮播 + 点击预览、图片数量、新上架 / 寄售徽标
 - 标题、价格、核心参数、音频品牌、车况描述、寄售说明
-- 联系商家：复制客服微信 / 拨打电话 / 复制车源编号
+- 关注车源：本地缓存记录，关注后首页缩略图显示黄色星标
+- 用户评价：夯爆了 / 太顶了 / 人上人 / NPC / 拉完了，实时展示票数
+- 联系商家：复制客服微信 / 拨打电话 / 复制车辆信息（标题、品牌、型号、价格）
 - 分享给好友与朋友圈
 
 ### 淘车求购 `pages/purchase/purchase`
@@ -129,6 +132,8 @@ assetBaseUrl: useCloud ? cloudBaseUrl : localBaseUrl
 | GET | `/api/vehicles` | 车源列表（板块、关键词、六维筛选、分页） |
 | GET | `/api/vehicles/facets` | 筛选项 |
 | GET | `/api/vehicles/:idOrCode` | 车源详情 |
+| GET | `/api/vehicles/:idOrCode/ratings` | 车源评价统计 |
+| POST | `/api/vehicles/:idOrCode/rating` | 提交评价 |
 | GET | `/api/purchase-requests` | 公开求购榜 |
 | POST | `/api/purchase-requests` | 提交求购 |
 

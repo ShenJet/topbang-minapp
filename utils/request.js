@@ -17,6 +17,22 @@ function initCloud() {
   return cloudReady;
 }
 
+const DEVICE_STORAGE_KEY = 'device_id';
+
+/** 生成并持久化一个匿名设备标识，用于评价等无需登录的匿名投票去重 */
+function deviceId() {
+  try {
+    let id = wx.getStorageSync(DEVICE_STORAGE_KEY);
+    if (!id) {
+      id = `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+      wx.setStorageSync(DEVICE_STORAGE_KEY, id);
+    }
+    return String(id);
+  } catch (err) {
+    return '';
+  }
+}
+
 function queryString(data) {
   const parts = [];
   Object.keys(data || {}).forEach((key) => {
@@ -123,16 +139,22 @@ function request(options = {}) {
     if (query) path += (path.indexOf('?') >= 0 ? '&' : '?') + query;
   }
 
+  const header = Object.assign({}, options.header || {});
+  const id = deviceId();
+  if (id && !header['X-Device-Id'] && !header['x-device-id']) {
+    header['X-Device-Id'] = id;
+  }
+
   if (initCloud()) {
-    return cloudCall(path, method, data, options.header).catch((err) => {
+    return cloudCall(path, method, data, header).catch((err) => {
       if (!err || !err.network) throw err;
       // 云托管调用失败（本地调试 / 服务未部署）时，回退到测试域名，避免整站不可用
       console.warn('[request] 云托管调用失败，回退到 apiBaseUrl：', err.message);
       cloudUnavailable = true;
-      return httpCall(path, method, data, options.header);
+      return httpCall(path, method, data, header);
     });
   }
-  return httpCall(path, method, data, options.header);
+  return httpCall(path, method, data, header);
 }
 
 /** 把后端返回的相对图片地址补全为可直接展示的 HTTPS 地址 */
