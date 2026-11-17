@@ -3,7 +3,9 @@
     <view class="hero-glow"></view>
     <view class="hero-top">
       <view class="brand-block">
-        <view class="brand-mark">掏</view>
+        <view class="brand-logo">
+          <image class="brand-logo-img" src="/logo-topbang.jpeg" mode="aspectFill" />
+        </view>
         <view class="brand-text">
           <view class="store-name">{{store.name || '掏棒的车库'}}</view>
           <view class="store-slogan">{{store.slogan || '苏州 · 二手车精选'}}</view>
